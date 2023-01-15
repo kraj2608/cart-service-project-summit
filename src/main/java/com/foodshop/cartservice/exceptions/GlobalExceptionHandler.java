@@ -1,5 +1,6 @@
 package com.foodshop.cartservice.exceptions;
 
+import com.foodshop.cartservice.dto.ErrorResponseDTO;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +22,9 @@ import java.util.Map;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+                                                                  HttpHeaders headers, HttpStatusCode status,
+                                                                  WebRequest request) {
         Map<String, List<String>> body = new HashMap<>();
 
         List<String> errors = ex
@@ -37,12 +40,33 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Map<String, List<String>>> constraintViolationException(ConstraintViolationException ex, WebRequest request) {
+    public ResponseEntity<Map<String, List<String>>> constraintViolationException(
+            ConstraintViolationException ex, WebRequest request) {
         List<String> errors = new ArrayList<>();
         ex.getConstraintViolations().forEach(cv -> errors.add(cv.getMessage()));
         Map<String, List<String>> result = new HashMap<>();
         result.put("errors", errors);
         return new ResponseEntity<>(result, HttpStatus.NOT_ACCEPTABLE);
+    }
+
+    @ExceptionHandler(CartNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> cartNotFoundException(CartNotFoundException ex,
+                                                                  WebRequest request) {
+        return new ResponseEntity<>(ErrorResponseDTO
+                .builder()
+                .message(ex.getMessage())
+                .statusCode(HttpStatus.NOT_FOUND.value()).build()
+                , HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(CartAuthorizationAccessDeniedException.class)
+    public ResponseEntity<ErrorResponseDTO> cartAuthorizationAccessDeniedException(
+            CartAuthorizationAccessDeniedException ex, WebRequest request) {
+        return new ResponseEntity<>(ErrorResponseDTO
+                .builder()
+                .message(ex.getMessage())
+                .statusCode(HttpStatus.UNAUTHORIZED.value()).build()
+                , HttpStatus.UNAUTHORIZED);
     }
 
 
