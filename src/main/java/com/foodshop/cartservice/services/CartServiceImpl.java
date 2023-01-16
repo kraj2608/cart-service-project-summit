@@ -1,6 +1,7 @@
 package com.foodshop.cartservice.services;
 
 import com.foodshop.cartservice.dto.UpdateCartNameDTO;
+import com.foodshop.cartservice.exceptions.BadRequestException;
 import com.foodshop.cartservice.exceptions.CartAuthorizationAccessDeniedException;
 import com.foodshop.cartservice.exceptions.CartNotFoundException;
 import com.foodshop.cartservice.models.Cart;
@@ -8,6 +9,7 @@ import com.foodshop.cartservice.repositories.CartRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -33,5 +35,17 @@ public class CartServiceImpl implements ICartService{
         cart.setCartName(cartNameDTO.getCartName());
         cartRepository.save(cart);
         return cart;
+    }
+
+    @Override
+    public List<Cart> getAllCartsOfAUser(String userId, String type) throws BadRequestException {
+        if(Objects.equals(type, "PURCHASED")){
+            return cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false);
+        }else if (Objects.equals(type, "PENDING")){
+            return cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,false,false);
+        }else{
+            throw new BadRequestException("Invalid cart type");
+        }
+
     }
 }

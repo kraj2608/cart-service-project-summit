@@ -10,12 +10,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/cart")
 @RequiredArgsConstructor
 public class CartController {
 
     private final ICartService cartService;
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<Cart>> getAllCarts(@PathVariable("userId") String userId,
+                                                  @RequestParam("cart_type") String type){
+        return new ResponseEntity<>(cartService.getAllCartsOfAUser(userId,type),HttpStatus.OK);
+    }
 
     @PostMapping("/add")
     public ResponseEntity<Cart> addCart(@Valid @RequestBody CartDTO cartDTO){
