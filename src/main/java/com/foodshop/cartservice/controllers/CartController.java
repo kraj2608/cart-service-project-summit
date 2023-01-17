@@ -14,15 +14,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/cart")
+@RequestMapping("/carts")
 @RequiredArgsConstructor
 public class CartController {
 
     private final ICartService cartService;
 
-    @GetMapping("/{userId}")
+    @GetMapping("/user/{userId}")
     public ResponseEntity<List<Cart>> getAllCarts(@PathVariable("userId") String userId,
-                                                  @RequestParam("cart_type") String type){
+                                                  @RequestParam(required = false,value = "cart_type") String type){
         return new ResponseEntity<>(cartService.getAllCartsOfAUser(userId,type),HttpStatus.OK);
     }
 
@@ -31,16 +31,22 @@ public class CartController {
         return new ResponseEntity<>(cartService.addCart(cartDTO.toCart()), HttpStatus.CREATED);
     }
 
-    @PostMapping("/add/product/{cartId}")
+    @PostMapping("/{cartId}/add/product")
     public ResponseEntity<Cart> addProductToCart(@Valid @RequestBody ProductItemDTO productItem,
                                                  @PathVariable("cartId") String cartId){
         return new ResponseEntity<>(cartService.addProductToCart(cartId,productItem.toProduct()),HttpStatus.CREATED);
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/{cartId}/update/name")
     public ResponseEntity<Cart> updateCart(@Valid @RequestBody UpdateCartNameDTO cartDTO,
-                                           @PathVariable("id") String id){
+                                           @PathVariable("cartId") String id){
         return new ResponseEntity<>(cartService.updateCartName(cartDTO,id),HttpStatus.OK);
         
+    }
+
+    @DeleteMapping("/{cartId}/remove/product/{productId}")
+    public ResponseEntity<Cart> removeProductFromCart(@PathVariable("cartId") String cartId,
+                                                      @PathVariable("productId") String productId){
+        return new ResponseEntity<>(cartService.removeProductFromCart(cartId,productId),HttpStatus.CREATED);
     }
 }
