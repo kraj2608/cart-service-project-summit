@@ -21,5 +21,7 @@ public interface ICartService {
 
     Cart removeProductFromCart(String cartId,String productId) throws CartNotFoundException;
 
+    Cart removeCart(String cartId,String userId) throws CartNotFoundException,CartAuthorizationAccessDeniedException;
+
 
 }
