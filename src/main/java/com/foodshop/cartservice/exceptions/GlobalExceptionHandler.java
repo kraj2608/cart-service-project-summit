@@ -69,6 +69,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 , HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponseDTO> badRequestException(
+            BadRequestException ex, WebRequest request) {
+        return new ResponseEntity<>(ErrorResponseDTO
+                .builder()
+                .message(ex.getMessage())
+                .statusCode(HttpStatus.BAD_REQUEST.value()).build()
+                , HttpStatus.BAD_REQUEST);
+    }
+
 
 
 }
