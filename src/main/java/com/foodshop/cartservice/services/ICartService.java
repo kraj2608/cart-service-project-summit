@@ -14,6 +14,8 @@ public interface ICartService {
     Cart updateCartName(UpdateCartNameDTO cartNameDTO, String id) throws
             CartNotFoundException, CartAuthorizationAccessDeniedException;
 
+    Cart getCart(String cartId,String userId) throws CartNotFoundException, CartAuthorizationAccessDeniedException;
+
     List<Cart> getAllCartsOfAUser(String userId,String type) throws BadRequestException;
     Cart addProductToCart(String cartId, ProductItem productItem) throws CartNotFoundException;
 

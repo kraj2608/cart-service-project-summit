@@ -41,6 +41,16 @@ public class CartServiceImpl implements ICartService{
     }
 
     @Override
+    public Cart getCart(String cartId, String userId) throws CartNotFoundException, CartAuthorizationAccessDeniedException {
+        cartExistCheck(cartId);
+        Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
+        if (!Objects.equals(cart.getOwnerId(), userId)){
+            throw new CartAuthorizationAccessDeniedException("Access denied");
+        }
+        return cart;
+    }
+
+    @Override
     public List<Cart> getAllCartsOfAUser(String userId, String type) throws BadRequestException {
         if (type == null){
             return Stream.concat(cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false).stream(),

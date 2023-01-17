@@ -20,7 +20,13 @@ public class CartController {
 
     private final ICartService cartService;
 
-    @GetMapping("/user/{userId}")
+    @GetMapping("/{cartId}/{userId}")
+    public ResponseEntity<Cart> getCart(@PathVariable("userId") String userId,
+                                        @PathVariable("cartId") String cartId){
+        return new ResponseEntity<>(cartService.getCart(cartId,userId),HttpStatus.OK);
+    }
+
+    @GetMapping("/{userId}")
     public ResponseEntity<List<Cart>> getAllCarts(@PathVariable("userId") String userId,
                                                   @RequestParam(required = false,value = "cart_type") String type){
         return new ResponseEntity<>(cartService.getAllCartsOfAUser(userId,type),HttpStatus.OK);
