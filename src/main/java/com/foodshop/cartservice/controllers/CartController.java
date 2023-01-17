@@ -1,6 +1,7 @@
 package com.foodshop.cartservice.controllers;
 
 import com.foodshop.cartservice.dto.CartDTO;
+import com.foodshop.cartservice.dto.ProductItemDTO;
 import com.foodshop.cartservice.dto.UpdateCartNameDTO;
 import com.foodshop.cartservice.models.Cart;
 import com.foodshop.cartservice.services.ICartService;
@@ -28,6 +29,12 @@ public class CartController {
     @PostMapping("/add")
     public ResponseEntity<Cart> addCart(@Valid @RequestBody CartDTO cartDTO){
         return new ResponseEntity<>(cartService.addCart(cartDTO.toCart()), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/add/product/{cartId}")
+    public ResponseEntity<Cart> addProductToCart(@Valid @RequestBody ProductItemDTO productItem,
+                                                 @PathVariable("cartId") String cartId){
+        return new ResponseEntity<>(cartService.addProductToCart(cartId,productItem.toProduct()),HttpStatus.CREATED);
     }
 
     @PutMapping("/update/{id}")
