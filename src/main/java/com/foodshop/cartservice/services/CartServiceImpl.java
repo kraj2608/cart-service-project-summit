@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +42,10 @@ public class CartServiceImpl implements ICartService{
 
     @Override
     public List<Cart> getAllCartsOfAUser(String userId, String type) throws BadRequestException {
-        if(Objects.equals(type, "PURCHASED")){
+        if (type == null){
+            return Stream.concat(cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false).stream(),
+                    cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,false,false).stream()).toList();
+        }else if(Objects.equals(type, "PURCHASED")){
             return cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false);
         }else if (Objects.equals(type, "PENDING")){
             return cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,false,false);
@@ -53,9 +57,7 @@ public class CartServiceImpl implements ICartService{
 
     @Override
     public Cart addProductToCart(String cartId, ProductItem newProductITem) throws CartNotFoundException {
-        if (!cartRepository.existsByIdAndDeleted(cartId,false)){
-            throw new CartNotFoundException("Cart not found");
-        }
+        cartExistCheck(cartId);
         Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
         AtomicBoolean findExistingProduct = new AtomicBoolean(false);
         cart.getProductItems().forEach(productItem -> {
@@ -68,5 +70,23 @@ public class CartServiceImpl implements ICartService{
             cart.getProductItems().add(newProductITem);
         }
         return cartRepository.save(cart);
+    }
+
+    @Override
+    public Cart removeProductFromCart(String cartId, String productId) throws CartNotFoundException {
+        cartExistCheck(cartId);
+        Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
+        cart.setProductItems(cart.getProductItems()
+                .stream()
+                .filter(productItem -> !Objects.equals(productItem.getProductId(), productId))
+                .toList());
+        cartRepository.save(cart);
+        return cart;
+    }
+
+    private void cartExistCheck(String cartId) throws CartNotFoundException{
+        if (!cartRepository.existsByIdAndDeleted(cartId,false)){
+            throw new CartNotFoundException("Cart not found");
+        }
     }
 }

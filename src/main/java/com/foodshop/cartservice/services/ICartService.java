@@ -16,4 +16,8 @@ public interface ICartService {
 
     List<Cart> getAllCartsOfAUser(String userId,String type) throws BadRequestException;
     Cart addProductToCart(String cartId, ProductItem productItem) throws CartNotFoundException;
+
+    Cart removeProductFromCart(String cartId,String productId) throws CartNotFoundException;
+
+
 }
