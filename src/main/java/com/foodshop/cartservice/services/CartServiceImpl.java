@@ -1,5 +1,8 @@
 package com.foodshop.cartservice.services;
 
+import com.foodshop.cartservice.constants.ResponseMessages;
+import com.foodshop.cartservice.dto.CartListResponseDTO;
+import com.foodshop.cartservice.dto.CartResponseDTO;
 import com.foodshop.cartservice.dto.UpdateCartNameDTO;
 import com.foodshop.cartservice.exceptions.BadRequestException;
 import com.foodshop.cartservice.exceptions.CartAuthorizationAccessDeniedException;
@@ -8,9 +11,8 @@ import com.foodshop.cartservice.models.Cart;
 import com.foodshop.cartservice.models.ProductItem;
 import com.foodshop.cartservice.repositories.CartRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
@@ -21,12 +23,17 @@ public class CartServiceImpl implements ICartService{
 
     private final CartRepository cartRepository;
     @Override
-    public Cart addCart(Cart cart) {
-        return cartRepository.save(cart);
+    public CartResponseDTO addCart(Cart cart) {
+        return CartResponseDTO
+                .builder()
+                .cart(cartRepository.save(cart))
+                .message(ResponseMessages.CART_CREATED_SUCCESS)
+                .statusCode(HttpStatus.CREATED.value())
+                .build();
     }
 
     @Override
-    public Cart updateCartName(UpdateCartNameDTO cartNameDTO, String id) throws CartNotFoundException,CartAuthorizationAccessDeniedException {
+    public CartResponseDTO updateCartName(UpdateCartNameDTO cartNameDTO, String id) throws CartNotFoundException,CartAuthorizationAccessDeniedException {
         if (!cartRepository.existsByIdAndDeleted(id,false)){
             throw new CartNotFoundException("Cart not found");
         }
@@ -34,31 +41,56 @@ public class CartServiceImpl implements ICartService{
         if(!Objects.equals(cart.getOwnerId(), cartNameDTO.getOwnerId())){
             throw new CartAuthorizationAccessDeniedException("Access denied for this cart");
         }
-        cartRepository.delete(cart);
         cart.setCartName(cartNameDTO.getCartName());
-        cartRepository.save(cart);
-        return cart;
+        return CartResponseDTO
+                .builder()
+                .cart(cartRepository.save(cart))
+                .message(ResponseMessages.CART_UPDATED_SUCCESS)
+                .statusCode(HttpStatus.CREATED.value())
+                .build();
+
     }
 
     @Override
-    public Cart getCart(String cartId, String userId) throws CartNotFoundException, CartAuthorizationAccessDeniedException {
+    public CartResponseDTO getCart(String cartId, String userId) throws CartNotFoundException, CartAuthorizationAccessDeniedException {
         cartExistCheck(cartId);
         Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
         if (!Objects.equals(cart.getOwnerId(), userId)){
             throw new CartAuthorizationAccessDeniedException("Access denied");
         }
-        return cart;
+        return CartResponseDTO
+                .builder()
+                .cart(cartRepository.getCartByIdAndDeleted(cartId,false))
+                .message(ResponseMessages.CART_FETCHED_SUCCESS)
+                .statusCode(HttpStatus.OK.value())
+                .build();
     }
 
     @Override
-    public List<Cart> getAllCartsOfAUser(String userId, String type) throws BadRequestException {
+    public CartListResponseDTO getAllCartsOfAUser(String userId, String type) throws BadRequestException {
         if (type == null){
-            return Stream.concat(cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false).stream(),
-                    cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,false,false).stream()).toList();
+            return CartListResponseDTO
+                    .builder()
+                    .carts(Stream.concat(cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false).stream(),
+                            cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,false,false).stream()).toList())
+                    .message(ResponseMessages.CARTS_FETCHED_SUCCESS)
+                    .statusCode(HttpStatus.OK.value())
+                    .build();
         }else if(Objects.equals(type, "PURCHASED")){
-            return cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false);
+            return CartListResponseDTO
+                    .builder()
+                    .carts(cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false))
+                    .message(ResponseMessages.CARTS_FETCHED_SUCCESS)
+                    .statusCode(HttpStatus.OK.value())
+                    .build();
+
         }else if (Objects.equals(type, "PENDING")){
-            return cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,false,false);
+            return CartListResponseDTO
+                    .builder()
+                    .carts(cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,false,false))
+                    .message(ResponseMessages.CARTS_FETCHED_SUCCESS)
+                    .statusCode(HttpStatus.OK.value())
+                    .build();
         }else{
             throw new BadRequestException("Invalid cart type");
         }
@@ -66,7 +98,7 @@ public class CartServiceImpl implements ICartService{
     }
 
     @Override
-    public Cart addProductToCart(String cartId, ProductItem newProductITem) throws CartNotFoundException {
+    public CartResponseDTO addProductToCart(String cartId, ProductItem newProductITem) throws CartNotFoundException {
         cartExistCheck(cartId);
         Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
         AtomicBoolean findExistingProduct = new AtomicBoolean(false);
@@ -79,23 +111,32 @@ public class CartServiceImpl implements ICartService{
         if(!findExistingProduct.get()){
             cart.getProductItems().add(newProductITem);
         }
-        return cartRepository.save(cart);
+        return CartResponseDTO
+                .builder()
+                .cart(cartRepository.save(cart))
+                .message(ResponseMessages.CART_PRODUCT_ADD_SUCCESS)
+                .statusCode(HttpStatus.CREATED.value())
+                .build();
     }
 
     @Override
-    public Cart removeProductFromCart(String cartId, String productId) throws CartNotFoundException {
+    public CartResponseDTO removeProductFromCart(String cartId, String productId) throws CartNotFoundException {
         cartExistCheck(cartId);
         Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
         cart.setProductItems(cart.getProductItems()
                 .stream()
                 .filter(productItem -> !Objects.equals(productItem.getProductId(), productId))
                 .toList());
-        cartRepository.save(cart);
-        return cart;
+        return CartResponseDTO
+                .builder()
+                .cart(cartRepository.save(cart))
+                .message(ResponseMessages.CART_PRODUCT_REMOVE_SUCCESS)
+                .statusCode(HttpStatus.CREATED.value())
+                .build();
     }
 
     @Override
-    public Cart removeCart(String cartId,String userID) throws CartNotFoundException {
+    public CartResponseDTO removeCart(String cartId,String userID) throws CartNotFoundException {
         cartExistCheck(cartId);
         Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
         if(!Objects.equals(cart.getOwnerId(), userID)){
@@ -103,7 +144,12 @@ public class CartServiceImpl implements ICartService{
         }
         cart.setDeleted(true);
         cartRepository.save(cart);
-        return cart;
+        return CartResponseDTO
+                .builder()
+                .cart(cartRepository.save(cart))
+                .message(ResponseMessages.CART_REMOVED_SUCCESS)
+                .statusCode(HttpStatus.CREATED.value())
+                .build();
     }
 
     private void cartExistCheck(String cartId) throws CartNotFoundException{
