@@ -94,6 +94,18 @@ public class CartServiceImpl implements ICartService{
         return cart;
     }
 
+    @Override
+    public Cart removeCart(String cartId,String userID) throws CartNotFoundException {
+        cartExistCheck(cartId);
+        Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
+        if(!Objects.equals(cart.getOwnerId(), userID)){
+            throw new CartNotFoundException("Access Denied");
+        }
+        cart.setDeleted(true);
+        cartRepository.save(cart);
+        return cart;
+    }
+
     private void cartExistCheck(String cartId) throws CartNotFoundException{
         if (!cartRepository.existsByIdAndDeleted(cartId,false)){
             throw new CartNotFoundException("Cart not found");

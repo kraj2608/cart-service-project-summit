@@ -55,4 +55,10 @@ public class CartController {
                                                       @PathVariable("productId") String productId){
         return new ResponseEntity<>(cartService.removeProductFromCart(cartId,productId),HttpStatus.CREATED);
     }
+
+    @DeleteMapping("/{cartId}/{userId}")
+    public ResponseEntity<Cart> deleteCart(@PathVariable("cartId") String cartId,
+                                           @PathVariable("userId") String userId){
+        return new ResponseEntity<>(cartService.removeCart(cartId,userId),HttpStatus.CREATED);
+    }
 }
