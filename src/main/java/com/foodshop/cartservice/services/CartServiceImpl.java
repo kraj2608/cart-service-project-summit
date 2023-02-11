@@ -5,7 +5,6 @@ import com.foodshop.cartservice.dto.CartListResponseDTO;
 import com.foodshop.cartservice.dto.CartResponseDTO;
 import com.foodshop.cartservice.dto.UpdateCartNameDTO;
 import com.foodshop.cartservice.exceptions.BadRequestException;
-import com.foodshop.cartservice.exceptions.CartAuthorizationAccessDeniedException;
 import com.foodshop.cartservice.exceptions.CartNotFoundException;
 import com.foodshop.cartservice.models.Cart;
 import com.foodshop.cartservice.models.ProductItem;
@@ -33,14 +32,11 @@ public class CartServiceImpl implements ICartService{
     }
 
     @Override
-    public CartResponseDTO updateCartName(UpdateCartNameDTO cartNameDTO, String id) throws CartNotFoundException,CartAuthorizationAccessDeniedException {
+    public CartResponseDTO updateCartName(UpdateCartNameDTO cartNameDTO, String id) throws CartNotFoundException {
         if (!cartRepository.existsByIdAndDeleted(id,false)){
             throw new CartNotFoundException("Cart not found");
         }
         Cart cart = cartRepository.getCartByIdAndDeleted(id,false);
-        if(!Objects.equals(cart.getOwnerId(), cartNameDTO.getOwnerId())){
-            throw new CartAuthorizationAccessDeniedException("Access denied for this cart");
-        }
         cart.setCartName(cartNameDTO.getCartName());
         return CartResponseDTO
                 .builder()
@@ -52,12 +48,8 @@ public class CartServiceImpl implements ICartService{
     }
 
     @Override
-    public CartResponseDTO getCart(String cartId, String userId) throws CartNotFoundException, CartAuthorizationAccessDeniedException {
+    public CartResponseDTO getCart(String cartId) throws CartNotFoundException {
         cartExistCheck(cartId);
-        Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
-        if (!Objects.equals(cart.getOwnerId(), userId)){
-            throw new CartAuthorizationAccessDeniedException("Access denied");
-        }
         return CartResponseDTO
                 .builder()
                 .cart(cartRepository.getCartByIdAndDeleted(cartId,false))
@@ -136,14 +128,10 @@ public class CartServiceImpl implements ICartService{
     }
 
     @Override
-    public CartResponseDTO removeCart(String cartId,String userID) throws CartNotFoundException {
+    public CartResponseDTO removeCart(String cartId) throws CartNotFoundException {
         cartExistCheck(cartId);
         Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
-        if(!Objects.equals(cart.getOwnerId(), userID)){
-            throw new CartNotFoundException("Access Denied");
-        }
         cart.setDeleted(true);
-        cartRepository.save(cart);
         return CartResponseDTO
                 .builder()
                 .cart(cartRepository.save(cart))

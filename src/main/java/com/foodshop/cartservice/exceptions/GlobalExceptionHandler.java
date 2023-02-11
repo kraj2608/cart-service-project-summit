@@ -59,15 +59,6 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 , HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(CartAuthorizationAccessDeniedException.class)
-    public ResponseEntity<ErrorResponseDTO> cartAuthorizationAccessDeniedException(
-            CartAuthorizationAccessDeniedException ex, WebRequest request) {
-        return new ResponseEntity<>(ErrorResponseDTO
-                .builder()
-                .message(ex.getMessage())
-                .statusCode(HttpStatus.UNAUTHORIZED.value()).build()
-                , HttpStatus.UNAUTHORIZED);
-    }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponseDTO> badRequestException(
