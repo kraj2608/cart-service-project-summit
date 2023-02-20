@@ -14,7 +14,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -33,10 +32,10 @@ public class CartServiceImpl implements ICartService{
 
     @Override
     public CartResponseDTO updateCartName(UpdateCartNameDTO cartNameDTO, String id) throws CartNotFoundException {
-        if (!cartRepository.existsByIdAndDeleted(id,false)){
+        if (!cartRepository.existsById(id)){
             throw new CartNotFoundException("Cart not found");
         }
-        Cart cart = cartRepository.getCartByIdAndDeleted(id,false);
+        Cart cart = cartRepository.getCartById(id);
         cart.setCartName(cartNameDTO.getCartName());
         return CartResponseDTO
                 .builder()
@@ -52,52 +51,34 @@ public class CartServiceImpl implements ICartService{
         cartExistCheck(cartId);
         return CartResponseDTO
                 .builder()
-                .cart(cartRepository.getCartByIdAndDeleted(cartId,false))
+                .cart(cartRepository.getCartById(cartId))
                 .message(ResponseMessages.CART_FETCHED_SUCCESS)
                 .statusCode(HttpStatus.OK.value())
                 .build();
     }
 
     @Override
-    public CartListResponseDTO getAllCartsOfAUser(String userId, String type) throws BadRequestException {
-        if (type == null){
+    public CartListResponseDTO getAllCartsOfAUser(String email) throws BadRequestException {
+
             return CartListResponseDTO
                     .builder()
-                    .carts(Stream.concat(cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false).stream(),
-                            cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,false,false).stream()).toList())
-                    .message(ResponseMessages.CARTS_FETCHED_SUCCESS)
-                    .statusCode(HttpStatus.OK.value())
-                    .build();
-        }else if(Objects.equals(type, "PURCHASED")){
-            return CartListResponseDTO
-                    .builder()
-                    .carts(cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,true,false))
+                    .carts(cartRepository.getAllByOwnerEmail(email))
                     .message(ResponseMessages.CARTS_FETCHED_SUCCESS)
                     .statusCode(HttpStatus.OK.value())
                     .build();
 
-        }else if (Objects.equals(type, "PENDING")){
-            return CartListResponseDTO
-                    .builder()
-                    .carts(cartRepository.getCartsByOwnerIdAndPurchasedAndDeleted(userId,false,false))
-                    .message(ResponseMessages.CARTS_FETCHED_SUCCESS)
-                    .statusCode(HttpStatus.OK.value())
-                    .build();
-        }else{
-            throw new BadRequestException("Invalid cart type");
-        }
 
     }
 
     @Override
     public CartResponseDTO addProductToCart(String cartId, ProductItem newProductITem) throws CartNotFoundException {
         cartExistCheck(cartId);
-        Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
+        Cart cart = cartRepository.getCartById(cartId);
         AtomicBoolean findExistingProduct = new AtomicBoolean(false);
         cart.getProductItems().forEach(productItem -> {
             if(Objects.equals(productItem.getProductId(), newProductITem.getProductId())){
                 findExistingProduct.set(true);
-                productItem.setQuantity(newProductITem.getQuantity());
+                productItem.setQuantity(newProductITem.getQuantity() + productItem.getQuantity());
             }
         });
         if(!findExistingProduct.get()){
@@ -114,11 +95,20 @@ public class CartServiceImpl implements ICartService{
     @Override
     public CartResponseDTO removeProductFromCart(String cartId, String productId) throws CartNotFoundException {
         cartExistCheck(cartId);
-        Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
-        cart.setProductItems(cart.getProductItems()
-                .stream()
-                .filter(productItem -> !Objects.equals(productItem.getProductId(), productId))
-                .toList());
+        Cart cart = cartRepository.getCartById(cartId);
+        cart.getProductItems().forEach(productItem -> {
+            if (Objects.equals(productItem.getProductId(), productId)){
+                if (productItem.getQuantity() - 1 == 0){
+                    cart.setProductItems(cart.getProductItems().stream().filter(productItem1 ->
+                            !Objects.equals(productItem1.getProductId(), productItem.getProductId())
+                    ).toList());
+
+                }else{
+                    productItem.setQuantity(productItem.getQuantity() - 1);
+                }
+            }
+
+        });
         return CartResponseDTO
                 .builder()
                 .cart(cartRepository.save(cart))
@@ -130,18 +120,18 @@ public class CartServiceImpl implements ICartService{
     @Override
     public CartResponseDTO removeCart(String cartId) throws CartNotFoundException {
         cartExistCheck(cartId);
-        Cart cart = cartRepository.getCartByIdAndDeleted(cartId,false);
-        cart.setDeleted(true);
+        Cart cart = cartRepository.getCartById(cartId);
+        cartRepository.delete(cart);
         return CartResponseDTO
                 .builder()
-                .cart(cartRepository.save(cart))
+                .cart(cart)
                 .message(ResponseMessages.CART_REMOVED_SUCCESS)
                 .statusCode(HttpStatus.CREATED.value())
                 .build();
     }
 
     private void cartExistCheck(String cartId) throws CartNotFoundException{
-        if (!cartRepository.existsByIdAndDeleted(cartId,false)){
+        if (!cartRepository.existsById(cartId)){
             throw new CartNotFoundException("Cart not found");
         }
     }

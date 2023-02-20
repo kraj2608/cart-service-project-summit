@@ -19,14 +19,11 @@ public class Cart {
     @Id
     private String id;
 
-    @JsonProperty("owner_id")
-    private String ownerId;
+    @JsonProperty("owner_email")
+    private String ownerEmail;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private boolean purchased;
-
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    private boolean deleted;
 
     @CreatedDate
     @JsonProperty("created_at")

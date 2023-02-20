@@ -6,15 +6,16 @@ import com.foodshop.cartservice.models.ProductItem;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 public class CartDTO {
 
 
-    @NotEmpty(message = "Owner id is required")
-    @JsonProperty("owner_id")
-    private String ownerId;
+    @NotEmpty(message = "Owner email is required")
+    @JsonProperty("owner_email")
+    private String ownerEmail;
 
     @NotEmpty(message = "Cart name is required")
     @JsonProperty("cart_name")
@@ -26,8 +27,8 @@ public class CartDTO {
     public Cart toCart(){
         return Cart.builder()
                 .cartName(cartName)
-                .ownerId(ownerId)
-                .productItems(productItems)
+                .ownerEmail(ownerEmail)
+                .productItems(new ArrayList<>())
                 .build();
     }
 }
