@@ -6,9 +6,10 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import java.util.List;
 
 public interface CartRepository extends MongoRepository<Cart,String> {
-    Cart getCartByIdAndDeleted(String id, boolean deleted);
-    boolean existsByIdAndDeleted(String id, boolean deleted);
+    Cart getCartById(String id);
+    boolean existsById(String id);
 
-    List<Cart> getCartsByOwnerIdAndPurchasedAndDeleted(String ownerId, boolean purchased, boolean deleted);
+
+    List<Cart> getAllByOwnerEmail(String ownerEmail);
 
 }

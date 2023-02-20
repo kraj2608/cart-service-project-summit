@@ -17,10 +17,17 @@ public class ProductItemDTO {
     @Min(value = 1, message = "quantity must be greater than or equal to 1!")
     private Integer quantity;
 
+    @JsonProperty("unit_price")
+    @Min(value = 0, message = "unit_price is required")
+    @NotNull(message = "unit_price cannot be null")
+    private int unitPrice;
+
+
     public ProductItem toProduct(){
         return ProductItem.builder()
                 .productId(productId)
                 .quantity(quantity)
+                .unitPrice(unitPrice)
                 .build();
     }
 }

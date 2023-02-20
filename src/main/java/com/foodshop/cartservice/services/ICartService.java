@@ -16,10 +16,10 @@ public interface ICartService {
 
     CartResponseDTO getCart(String cartId) throws CartNotFoundException;
 
-    CartListResponseDTO getAllCartsOfAUser(String userId, String type) throws BadRequestException;
+    CartListResponseDTO getAllCartsOfAUser(String userId) throws BadRequestException;
     CartResponseDTO addProductToCart(String cartId, ProductItem productItem) throws CartNotFoundException;
 
-    CartResponseDTO removeProductFromCart(String cartId,String productId) throws CartNotFoundException;
+    CartResponseDTO removeProductFromCart(String cartId, String productId) throws CartNotFoundException;
 
     CartResponseDTO removeCart(String cartId) throws CartNotFoundException;
 
